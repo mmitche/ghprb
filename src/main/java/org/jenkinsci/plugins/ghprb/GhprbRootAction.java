@@ -182,8 +182,13 @@ public class GhprbRootAction implements UnprotectedRootAction {
         if (projects != null) {
             for (AbstractProject<?, ?> project : projects) {
                 GhprbTrigger trigger = Ghprb.extractTrigger(project);
-                if (trigger.matchSignature(body, signature)) {
-                    triggers.add(trigger);
+                try {
+                    if (trigger.matchSignature(body, signature)) {
+                        triggers.add(trigger);
+                    }
+                }
+                catch (Exception e) {
+                    logger.log(Level.SEVERE, "Failed to match signature for trigger on project: " + trigger.getProjectName(), e);
                 }
             }
         }
