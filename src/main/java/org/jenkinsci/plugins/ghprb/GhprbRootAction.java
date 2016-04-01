@@ -32,7 +32,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
 /**
- * @author Honza Brázdil <jbrazdil@redhat.com>
+ * @author Honza BrÃ¡zdil <jbrazdil@redhat.com>
  */
 @Extension
 public class GhprbRootAction implements UnprotectedRootAction {
@@ -182,6 +182,10 @@ public class GhprbRootAction implements UnprotectedRootAction {
         if (projects != null) {
             for (AbstractProject<?, ?> project : projects) {
                 GhprbTrigger trigger = Ghprb.extractTrigger(project);
+                if (trigger == null) {
+                    logger.log(Level.WARNING, "Warning, trigger unexpectedly null for project " + project.getFullName());
+                    continue;
+                }
                 try {
                     if (trigger.matchSignature(body, signature)) {
                         triggers.add(trigger);
