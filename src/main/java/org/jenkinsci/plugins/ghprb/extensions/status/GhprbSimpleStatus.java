@@ -142,7 +142,9 @@ public void onBuildTriggered(AbstractProject<?, ?> project, String commitSha, bo
         StringBuilder sb = new StringBuilder();
         if (StringUtils.isEmpty(startedStatus)) {
             sb.append("Build started");
-            sb.append(c.isMerged() ? " sha1 is merged." : " sha1 is original commit.");
+            if (c != null) {
+                sb.append(c.isMerged() ? " sha1 is merged." : " sha1 is original commit.");
+            }
         } else {
             sb.append(Ghprb.replaceMacros(build, listener, startedStatus));
         }
