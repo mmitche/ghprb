@@ -91,6 +91,7 @@ public class GhprbBuilds {
         GhprbTrigger trigger = Ghprb.extractTrigger(build);
 
         try {
+            GhprbBuilds.logger.log(Level.INFO, "GHPRB: onStarted " + trigger.getRepository().getName() + "." + "getPullRequest(" + c.getPullID() + ")");
             GHPullRequest pr = trigger.getRepository().getPullRequest(c.getPullID());
             int counter = 0;
             // If the PR is being resolved by GitHub then getMergeable will return null
@@ -200,6 +201,7 @@ public class GhprbBuilds {
 
     private void closeFailedRequest(TaskListener listener, GhprbCause c) {
         try {
+            GhprbBuilds.logger.log(Level.INFO, "GHPRB: closeFailedRequest " + repo.getName() + "." + "getPullRequest(" + c.getPullID() + ")");
             GHPullRequest pr = repo.getPullRequest(c.getPullID());
 
             if (pr.getState().equals(GHIssueState.OPEN)) {

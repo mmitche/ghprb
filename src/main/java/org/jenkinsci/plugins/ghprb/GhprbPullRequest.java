@@ -138,6 +138,7 @@ public class GhprbPullRequest {
         }
         
         try {
+            logger.log(Level.INFO, "GHPRB: check(GHPullRequest ghpr) " + repo.getName() + "." + "getPullRequest(" + ghpr.getId() + ")");
             getPullRequest(false);
         } catch (IOException e) {
             logger.log(Level.SEVERE, "Unable to get the latest copy of the PR from github", e);
@@ -178,6 +179,7 @@ public class GhprbPullRequest {
             } catch (IOException e) {
                 logger.log(Level.SEVERE, "Couldn't get the user that made the comment", e);
             }
+            logger.log(Level.INFO, "GHPRB: check(GHIssueComment ghpr) " + repo.getName() + "." + "getPullRequest(" + this.id + ")");
             updatePR(getPullRequest(true), user);
         } catch (IOException ex) {
             logger.log(Level.SEVERE, "Unable to get a new copy of the pull request!");
@@ -386,6 +388,7 @@ public class GhprbPullRequest {
 
     public boolean checkMergeable() {
         try {
+            logger.log(Level.INFO, "GHPRB: checkMergeable " + repo.getName() + "." + "getPullRequest(" + this.id + ")");
             getPullRequest(false);
         } catch (IOException e) {
             logger.log(Level.SEVERE, "Unable to get a copy of the PR from github", e);
@@ -453,6 +456,7 @@ public class GhprbPullRequest {
      */
     public String getTarget() {
         try {
+            logger.log(Level.INFO, "GHPRB: getTarget " + repo.getName() + "." + "getPullRequest(" + this.id + ")");
             return getPullRequest(false).getBase().getRef();
         } catch (IOException e) {
             return "UNKNOWN";
@@ -465,6 +469,7 @@ public class GhprbPullRequest {
      */
     public String getSource() {
         try {
+            logger.log(Level.INFO, "GHPRB: getSource " + repo.getName() + "." + "getPullRequest(" + this.id + ")");
             return getPullRequest(false).getHead().getRef();
         } catch (IOException e) {
             return "UNKNOWN";
@@ -478,6 +483,7 @@ public class GhprbPullRequest {
      */
     public String getTitle() {
         try {
+            logger.log(Level.INFO, "GHPRB: getTitle " + repo.getName() + "." + "getPullRequest(" + this.id + ")");
             return getPullRequest(false).getTitle();
         } catch (IOException e) {
             return "UNKNOWN";
@@ -491,6 +497,7 @@ public class GhprbPullRequest {
      * @return the Github Pull Request URL
      */
     public URL getUrl() throws IOException {
+        logger.log(Level.INFO, "GHPRB: getUrl " + repo.getName() + "." + "getPullRequest(" + this.id + ")");
         return getPullRequest(false).getHtmlUrl();
     }
     
@@ -501,6 +508,7 @@ public class GhprbPullRequest {
      */
     public String getDescription() {
         try {
+            logger.log(Level.INFO, "GHPRB: getDescription " + repo.getName() + "." + "getPullRequest(" + this.id + ")");
             return getPullRequest(false).getBody();
         } catch (IOException e) {
             return "UNKNOWN";
@@ -517,6 +525,7 @@ public class GhprbPullRequest {
      * @throws IOException
      */
     public GHUser getPullRequestAuthor() throws IOException {
+        logger.log(Level.INFO, "GHPRB: getPullRequestAuthor " + repo.getName() + "." + "getPullRequest(" + this.id + ")");
         return getPullRequest(false).getUser();
     }
     

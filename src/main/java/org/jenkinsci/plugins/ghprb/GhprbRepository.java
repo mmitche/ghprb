@@ -246,6 +246,7 @@ public class GhprbRepository implements Saveable{
 
         try {
             GHRepository repo = getGitHubRepo();
+            logger.log(Level.INFO, "GHPRB: addComment " + repo.getName() + "." + "getPullRequest(" + id + ")");
             GHPullRequest pr = repo.getPullRequest(id);
             pr.comment(comment);
         } catch (IOException ex) {
@@ -256,6 +257,7 @@ public class GhprbRepository implements Saveable{
     public void closePullRequest(int id) {
         try {
             GHRepository repo = getGitHubRepo();
+            logger.log(Level.INFO, "GHPRB: closePullRequest" + repo.getName() + "." + "getPullRequest(" + id + ")");
             GHPullRequest pr = repo.getPullRequest(id);
             pr.close();
         } catch (IOException ex) {
@@ -314,6 +316,7 @@ public class GhprbRepository implements Saveable{
     }
 
     public GHPullRequest getPullRequest(int id) throws IOException {
+        logger.log(Level.INFO, "GHPRB: getPullRequest " + getGitHubRepo().getName() + "." + "getPullRequest(" + id + ")");
         return getGitHubRepo().getPullRequest(id);
     }
 
@@ -348,6 +351,7 @@ public class GhprbRepository implements Saveable{
             if (pr == null) {
                 if (ghpr == null) {
                     GHRepository repo = getGitHubRepo();
+                    logger.log(Level.INFO, "GHPRB: " + repo.getName() + "." + "getPullRequest(" + number + ")");
                     ghpr = repo.getPullRequest(number);
                 }
                 pr = new GhprbPullRequest(ghpr, trigger.getHelper(), this, isNew);
