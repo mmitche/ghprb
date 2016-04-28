@@ -62,7 +62,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * @author Honza Brázdil jbrazdil@redhat.com
+ * @author Honza BrÃ¡zdil jbrazdil@redhat.com
  */
 public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
 
@@ -592,6 +592,7 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
     
 
     public boolean matchSignature(String body, String signature) {
+        logger.log(Level.INFO, "Matching trigger info for " + getProjectName());
         if (!isActive()) {
             return false;
         }
@@ -916,7 +917,7 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
             Set<AbstractProject<?, ?>> projects = repoJobs.get(repo);
             if (projects != null) {
                 for (AbstractProject<?, ?> project : projects) {
-                    logger.log(Level.FINE, "Found project [{0}] for webhook repo [{0}]", new Object[]{project.getFullName(), repo});
+                    logger.log(Level.FINE, "Found project [{0}] for webhook repo [{1}]", new Object[]{project.getFullName(), repo});
                 }
             } else {
                 projects = Collections.newSetFromMap(new WeakHashMap<AbstractProject<?, ?>, Boolean>(0));

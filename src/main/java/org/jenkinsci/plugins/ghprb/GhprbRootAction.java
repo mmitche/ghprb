@@ -37,7 +37,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
 /**
- * @author Honza Brázdil jbrazdil@redhat.com
+ * @author Honza BrÃ¡zdil jbrazdil@redhat.com
  */
 @Extension
 public class GhprbRootAction implements UnprotectedRootAction {
@@ -303,6 +303,7 @@ public class GhprbRootAction implements UnprotectedRootAction {
                     continue;
                 }
                 try {
+                     logger.log(Level.INFO, "Matching " + project.getFullName());
                     if (trigger.matchSignature(body, signature)) {
                         triggers.add(trigger);
                     }

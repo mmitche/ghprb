@@ -44,7 +44,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * @author Honza Brázdil jbrazdil@redhat.com
+ * @author Honza BrÃ¡zdil jbrazdil@redhat.com
  */
 public class GhprbRepository implements Saveable{
 
@@ -119,6 +119,9 @@ public class GhprbRepository implements Saveable{
         return true;
     }
 
+    // This method is used when not running with webhooks.  We pull in the
+    // active PRs for the repo associated with the trigger and check the
+    // comments/hashes that have been added since the last time we checked.
     public void check() {
         
         if (!trigger.isActive()) {
@@ -152,7 +155,7 @@ public class GhprbRepository implements Saveable{
                     return;
                 }
             }
-            check(pr, true);
+            check(pr);
             closedPulls.remove(pr.getNumber());
         }
         
@@ -168,10 +171,10 @@ public class GhprbRepository implements Saveable{
         }
     }
 
-    private void check(GHPullRequest pr, boolean isNew) {
+    private void check(GHPullRequest pr) {
         int number = pr.getNumber();
         try {
-            GhprbPullRequest pull = getPullRequest(null, isNew, number);
+            GhprbPullRequest pull = getPullRequest(null, number);
             pull.check(pr);
         } catch (IOException e) {
             logger.log(Level.SEVERE, "Unable to check pr: " + number, e);
@@ -277,6 +280,8 @@ public class GhprbRepository implements Saveable{
         }
         return false;
     }
+    
+    public static Object createHookLock = new Object();
 
     public boolean createHook() {
         if (ghRepository == null) {
@@ -284,18 +289,22 @@ public class GhprbRepository implements Saveable{
             return false;
         }
         try {
-            if (hookExist()) {
+            // Avoid a race to update the hooks in a repo (we could end up with
+            // multiple hooks).  Lock on before we try this
+            synchronized (createHookLock) {
+                if (hookExist()) {
+                    return true;
+                }
+                Map<String, String> config = new HashMap<String, String>();
+                String secret = getSecret();
+                config.put("url", new URL(getHookUrl()).toExternalForm());
+                config.put("insecure_ssl", "1");
+                if (!StringUtils.isEmpty(secret)) {
+                 config.put("secret",secret);
+                }
+                ghRepository.createHook("web", config, HOOK_EVENTS, true);
                 return true;
             }
-            Map<String, String> config = new HashMap<String, String>();
-            String secret = getSecret();
-            config.put("url", new URL(getHookUrl()).toExternalForm());
-            config.put("insecure_ssl", "1");
-            if (!StringUtils.isEmpty(secret)) {
-             config.put("secret",secret);
-            }
-            ghRepository.createHook("web", config, HOOK_EVENTS, true);
-            return true;
         } catch (IOException ex) {
             logger.log(Level.SEVERE, "Couldn''t create web hook for repository {0}. Does the user (from global configuration) have admin rights to the repository?", reponame);
             return false;
@@ -335,7 +344,7 @@ public class GhprbRepository implements Saveable{
             return;
         }
 
-        GhprbPullRequest pull = getPullRequest(null, false, number);
+        GhprbPullRequest pull = getPullRequest(null, number);
         pull.check(issueComment.getComment());
         try {
             this.save();
@@ -344,7 +353,7 @@ public class GhprbRepository implements Saveable{
         }
     }
     
-    private GhprbPullRequest getPullRequest(GHPullRequest ghpr, Boolean isNew, Integer number) throws IOException {
+    private GhprbPullRequest getPullRequest(GHPullRequest ghpr, Integer number) throws IOException {
         if (number == null) {
             number = ghpr.getNumber();
         }
@@ -355,7 +364,7 @@ public class GhprbRepository implements Saveable{
                     GHRepository repo = getGitHubRepo();
                     ghpr = repo.getPullRequest(number);
                 }
-                pr = new GhprbPullRequest(ghpr, trigger.getHelper(), this, isNew);
+                pr = new GhprbPullRequest(ghpr, trigger.getHelper(), this);
                 pullRequests.put(number, pr);
             }
             
@@ -374,7 +383,7 @@ public class GhprbRepository implements Saveable{
         } else if (!trigger.isActive()) {
             logger.log(Level.FINE, "Not processing Pull request since the build is disabled");
         } else if ("opened".equals(action) || "reopened".equals(action) || "synchronize".equals(action)) {
-            GhprbPullRequest pull = getPullRequest(ghpr, false, number);
+            GhprbPullRequest pull = getPullRequest(ghpr, number);
             pull.check(ghpr);
         } else {
             logger.log(Level.WARNING, "Unknown Pull Request hook action: {0}", action);
