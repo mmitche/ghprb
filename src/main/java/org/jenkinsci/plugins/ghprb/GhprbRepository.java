@@ -69,7 +69,7 @@ public class GhprbRepository implements Saveable{
     
     public void init() {
         // make the initial check call to populate our data structures
-        initGhRepository();
+        // initGhRepository();
         
         for (Entry<Integer, GhprbPullRequest> next : pullRequests.entrySet()) {
             GhprbPullRequest pull = next.getValue();
@@ -175,7 +175,7 @@ public class GhprbRepository implements Saveable{
         int number = pr.getNumber();
         try {
             GhprbPullRequest pull = getPullRequest(null, number);
-            pull.check(pr);
+            pull.check(pr, false);
         } catch (IOException e) {
             logger.log(Level.SEVERE, "Unable to check pr: " + number, e);
         }
@@ -284,10 +284,6 @@ public class GhprbRepository implements Saveable{
     public static Object createHookLock = new Object();
 
     public boolean createHook() {
-        if (ghRepository == null) {
-            logger.log(Level.INFO, "Repository not available, cannot set pull request hook for repository {0}", reponame);
-            return false;
-        }
         try {
             // Avoid a race to update the hooks in a repo (we could end up with
             // multiple hooks).  Lock on before we try this
@@ -302,7 +298,7 @@ public class GhprbRepository implements Saveable{
                 if (!StringUtils.isEmpty(secret)) {
                  config.put("secret",secret);
                 }
-                ghRepository.createHook("web", config, HOOK_EVENTS, true);
+                getGitHubRepo().createHook("web", config, HOOK_EVENTS, true);
                 return true;
             }
         } catch (IOException ex) {
@@ -377,16 +373,25 @@ public class GhprbRepository implements Saveable{
         int number = pr.getNumber();
         String action = pr.getAction();
 
-
+        boolean doSave = false;
         if ("closed".equals(action)) {
             pullRequests.remove(number);
+            doSave = true;
         } else if (!trigger.isActive()) {
             logger.log(Level.FINE, "Not processing Pull request since the build is disabled");
         } else if ("opened".equals(action) || "reopened".equals(action) || "synchronize".equals(action)) {
             GhprbPullRequest pull = getPullRequest(ghpr, number);
-            pull.check(ghpr);
+            pull.check(ghpr, true);
+            doSave = true;
         } else {
             logger.log(Level.WARNING, "Unknown Pull Request hook action: {0}", action);
+        }
+        if (doSave) {
+            try {
+                this.save();
+            } catch (IOException e) {
+               logger.log(Level.SEVERE, "Unable to save repository!", e);
+            }
         }
     }
     

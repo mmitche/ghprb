@@ -251,7 +251,9 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
         helper = new Ghprb(this);
         
         if (getUseGitHubHooks()) {
-            this.repository.createHook();
+            if (GhprbTrigger.getDscp().getManageWebhooks()) {
+                this.repository.createHook();
+            }
             DESCRIPTOR.addRepoTrigger(getRepository().getName(), super.job);
         }
     }
@@ -637,6 +639,7 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
         private String cron = "H/5 * * * *";
         private Boolean useComments = false;
         private Boolean useDetailedComments = false;
+        private Boolean manageWebhooks = true;
         private GHCommitState unstableAs = GHCommitState.FAILURE;
         private List<GhprbBranch> whiteListTargetBranches;
         private Boolean autoCloseFailedPullRequests = false;
@@ -749,6 +752,7 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
             cron = formData.getString("cron");
             useComments = formData.getBoolean("useComments");
             useDetailedComments = formData.getBoolean("useDetailedComments");
+            manageWebhooks = formData.getBoolean("manageWebhooks");
             unstableAs = GHCommitState.valueOf(formData.getString("unstableAs"));
             autoCloseFailedPullRequests = formData.getBoolean("autoCloseFailedPullRequests");
             displayBuildErrorsOnDownstreamBuilds = formData.getBoolean("displayBuildErrorsOnDownstreamBuilds");
@@ -830,6 +834,9 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
             return useDetailedComments;
         }
 
+        public Boolean getManageWebhooks() {
+            return manageWebhooks;
+        }
 
         public Boolean getAutoCloseFailedPullRequests() {
             return autoCloseFailedPullRequests;
@@ -853,6 +860,10 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
 
         public boolean isUseDetailedComments() {
             return (useDetailedComments != null && useDetailedComments);
+        }
+        
+        public boolean isManageWebhooks() {
+            return (manageWebhooks != null && manageWebhooks);
         }
 
         public ListBoxModel doFillGitHubAuthIdItems(@QueryParameter("gitHubAuthId") String gitHubAuthId) {

@@ -72,6 +72,16 @@ public class GhprbPullRequest {
     private transient boolean triggered = false; // Only lets us know if the trigger phrase was used for this run
     private transient boolean mergeable = false; // Only works as an easy way to pass the value around for the start of
                                                  // this build
+    // Only useful for webhooks.  We want to avoid excessive use of
+    // Github API calls, specifically comment checks.  In updatePR, we check
+    // for comments that may have occurred between the previous update
+    // and the current one.  However, if we are using webhooks, we will always
+    // receive these events directly from github.  Unfortunately, simply avoiding
+    // the comment check altogether when using webhooks will not be perfect
+    // since a Jenkins restart could miss some comments.  This flag indicates that
+    // an initial comment check has been done and we can now operate in pure
+    // webhook mode.
+    private transient boolean initialCommentCheckDone = false;
 
     private final int id;
     private Date updated; // Needed to track when the PR was updated
@@ -147,13 +157,13 @@ public class GhprbPullRequest {
      *
      * @param ghpr the pull request from github
      */
-    public void check(GHPullRequest ghpr) {
+    public void check(GHPullRequest ghpr, boolean isWebhook) {
         if (helper.isProjectDisabled()) {
             logger.log(Level.FINE, "Project is disabled, ignoring pull request");
             return;
         }
         // Call update PR with the update PR info and no comment
-        updatePR(ghpr, null /*GHIssueComment*/);
+        updatePR(ghpr, null /*GHIssueComment*/, isWebhook);
         checkSkipBuild();
         tryBuild();
     }
@@ -176,7 +186,7 @@ public class GhprbPullRequest {
             return;
         }
 
-        updatePR(null /*GHPullRequest*/, comment);
+        updatePR(null /*GHPullRequest*/, comment, true);
         checkSkipBuild();
         tryBuild();
     }
@@ -198,7 +208,7 @@ public class GhprbPullRequest {
     //         the last update time.
     // Initialization of a new trigger/jenkins restart
     // where our view of the 
-    private void updatePR(GHPullRequest ghpr, GHIssueComment comment) {
+    private void updatePR(GHPullRequest ghpr, GHIssueComment comment, boolean isWebhook) {
         // Get the updated time
         try {
             Date lastUpdateTime = updated;
@@ -234,14 +244,15 @@ public class GhprbPullRequest {
                 // check that comment.  Otherwise check the full set since the last
                 // time we updated (which might have just happened).
                 int commentsChecked = 0;
-                if (comment != null) {
+                if (wasUpdated && (!isWebhook || !initialCommentCheckDone)) {
+                    initialCommentCheckDone = true;
+                    commentsChecked = checkComments(pullRequest, lastUpdateTime);
+                }
+                else if (comment != null) {
                     checkComment(comment);
                     commentsChecked = 1;
                 }
-                else if (wasUpdated) {
-                    // Avoid excessive calls to github by only checking for comments that have been updated
-                    commentsChecked = checkComments(pullRequest, lastUpdateTime);
-                }
+                
                 // Check the commit on the PR against the recorded version.
                 boolean newCommit = checkCommit(pullRequest);
             
@@ -277,29 +288,6 @@ public class GhprbPullRequest {
                    "PR #{0} target branch: {1} isn''t in our whitelist of target branches: {2}",
                    new Object[] { id, target, Joiner.on(',').skipNulls().join(branches) });
         return false;
-    }
-
-    private boolean isUpdated(GHPullRequest pr) {
-        synchronized (this) {
-            
-            boolean ret = false;
-            try {
-                Date lastUpdated = pr.getUpdatedAt();
-                ret = updated == null || updated.compareTo(lastUpdated) < 0;
-                setUpdated(lastUpdated);
-            } catch (IOException e) {
-                logger.log(Level.WARNING, "Unable to update last updated date", e);
-            }
-            GHCommitPointer pointer = pr.getHead();
-            String pointerSha = pointer.getSha();
-            ret |= !pointerSha.equals(head);
-
-            pointer = pr.getBase();
-            pointerSha = pointer.getSha();
-            ret |= !pointerSha.equals(base);
-
-            return ret;
-        }
     }
 
     private void tryBuild() {
