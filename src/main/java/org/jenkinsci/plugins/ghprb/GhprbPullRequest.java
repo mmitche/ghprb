@@ -70,8 +70,7 @@ public class GhprbPullRequest {
 
     private transient boolean shouldRun = false; // Declares if we should run the build this time.
     private transient boolean triggered = false; // Only lets us know if the trigger phrase was used for this run
-    private transient boolean mergeable = false; // Only works as an easy way to pass the value around for the start of
-                                                 // this build
+    
     // Only useful for webhooks.  We want to avoid excessive use of
     // Github API calls, specifically comment checks.  In updatePR, we check
     // for comments that may have occurred between the previous update
@@ -311,8 +310,6 @@ public class GhprbPullRequest {
                 logger.log(Level.FINEST, "Running the build");
 
                 if (pr != null) {
-                    logger.log(Level.FINEST, "PR is not null, checking if mergable");
-                    checkMergeable();
                     try {
                         for (GHPullRequestCommitDetail commitDetails : pr.listCommits()) {
                             if (commitDetails.getSha().equals(getHead())) {
@@ -443,25 +440,6 @@ public class GhprbPullRequest {
             logger.log(Level.SEVERE, "Couldn't obtain comments.", e);
         }
         return count;
-    }
-
-    public boolean checkMergeable() {
-        try {
-            int r = 5;
-            Boolean isMergeable = pr.getMergeable();
-            while (isMergeable == null && r-- > 0) {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException ex) {
-                    break;
-                }
-                isMergeable = pr.getMergeable();
-            }
-            mergeable = isMergeable != null && isMergeable;
-        } catch (IOException e) {
-            logger.log(Level.SEVERE, "Couldn't obtain mergeable status.", e);
-        }
-        return mergeable;
     }
 
     @Override
