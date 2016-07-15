@@ -24,6 +24,8 @@ public class GhprbBuildListener extends RunListener<AbstractBuild<?, ?>> {
             trigger.getBuilds().onStarted(build, listener);
         }
     }
+    
+    
 
     @Override
     public void onCompleted(AbstractBuild<?, ?> build, TaskListener listener) {
