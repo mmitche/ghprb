@@ -6,6 +6,7 @@ import hudson.matrix.MatrixProject;
 import hudson.model.TaskListener;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
+import hudson.model.Action;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -104,7 +105,7 @@ public class GhprbSimpleStatus extends GhprbExtension implements GhprbCommitStat
         return true;
     }
 
-    public void onBuildTriggered(AbstractProject<?, ?> project,
+    public List<Action> onBuildTriggered(AbstractProject<?, ?> project,
                                  String commitSha,
                                  boolean isMergeable,
                                  int prId,
@@ -115,7 +116,7 @@ public class GhprbSimpleStatus extends GhprbExtension implements GhprbCommitStat
 
         // check if we even need to update
         if (StringUtils.equals(triggeredStatus, "--none--")) {
-            return;
+            return null;
         }
 
         String statusUrl = getDescriptor().getStatusUrlDefault(this);
@@ -129,11 +130,12 @@ public class GhprbSimpleStatus extends GhprbExtension implements GhprbCommitStat
         } else {
             sb.append("Build triggered.");
             if (isMergeable) {
-                sb.append(" sha1 is merged.");
+                sb.append(" sha1 is merged");
             } else {
-                sb.append(" sha1 is original commit.");
+                sb.append(" sha1 is original commit");
             }
         }
+       
 
         String url = Ghprb.replaceMacros(project, statusUrl);
         if (StringUtils.equals(statusUrl, "--none--")) {

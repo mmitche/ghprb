@@ -36,8 +36,8 @@ public class GhprbNoCommitStatus extends GhprbExtension implements GhprbCommitSt
         
     }
 
-    public void onBuildTriggered(AbstractProject<?, ?> project, String commitSha, boolean isMergeable, int prId, GHRepository ghRepository) throws GhprbCommitStatusException {
-        
+    public List<Action> onBuildTriggered(AbstractProject<?, ?> project, String commitSha, boolean isMergeable, int prId, GHRepository ghRepository) throws GhprbCommitStatusException {
+        return null;
     }
 
     @Override
