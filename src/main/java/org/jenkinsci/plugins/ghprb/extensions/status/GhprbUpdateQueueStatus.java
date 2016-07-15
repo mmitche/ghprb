@@ -6,10 +6,8 @@
 package org.jenkinsci.plugins.ghprb.extensions.status;
 
 import hudson.Extension;
-import hudson.model.AbstractProject;
+import hudson.model.Action;
 import java.util.logging.Logger;
-import org.jenkinsci.plugins.ghprb.GhprbCause;
-import org.jenkinsci.plugins.ghprb.extensions.GhprbBuildStep;
 import org.jenkinsci.plugins.ghprb.extensions.GhprbExtension;
 import org.jenkinsci.plugins.ghprb.extensions.GhprbExtensionDescriptor;
 import org.jenkinsci.plugins.ghprb.extensions.GhprbGlobalDefault;
@@ -34,6 +32,7 @@ public class GhprbUpdateQueueStatus extends GhprbExtension implements Action, Gh
     private String context;
     private String message;
     private String commitSha;
+    private boolean started;
     private transient GHRepository repository;
     
     @DataBoundConstructor
@@ -43,10 +42,6 @@ public class GhprbUpdateQueueStatus extends GhprbExtension implements Action, Gh
         this.message = message;
         this.commitSha = commitSha;
         this.repository = repository;
-    }
-
-    public GhprbUpdateQueueStatus() {
-        
     }
     
     public GHRepository getRepository() {
@@ -79,6 +74,14 @@ public class GhprbUpdateQueueStatus extends GhprbExtension implements Action, Gh
 
     public String getUrlName() {
         return null;
+    }
+    
+    public boolean getStarted() {
+        return started;
+    }
+
+    public void setStarted() {
+        this.started = true;
     }
 
     @Override

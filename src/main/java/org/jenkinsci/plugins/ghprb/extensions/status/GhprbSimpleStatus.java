@@ -130,9 +130,9 @@ public class GhprbSimpleStatus extends GhprbExtension implements GhprbCommitStat
         } else {
             sb.append("Build triggered.");
             if (isMergeable) {
-                sb.append(" sha1 is merged");
+                sb.append(" sha1 is merged.");
             } else {
-                sb.append(" sha1 is original commit");
+                sb.append(" sha1 is original commit.");
             }
         }
        
@@ -148,6 +148,13 @@ public class GhprbSimpleStatus extends GhprbExtension implements GhprbCommitStat
         } catch (IOException e) {
             throw new GhprbCommitStatusException(e, state, message, prId);
         }
+        
+        // If the user desires, create a new build action that will cause 
+        // builds in the queue to update periodically.
+        
+        ArrayList<Action> newActions = new ArrayList<Action>();
+        newActions.add(new GhprbUpdateQueueStatus(url, context, message, commitSha, ghRepository));
+        return newActions;
     }
 
     public void onEnvironmentSetup(AbstractBuild<?, ?> build,
@@ -185,7 +192,19 @@ public class GhprbSimpleStatus extends GhprbExtension implements GhprbCommitStat
             sb.append(Ghprb.replaceMacros(build, listener, startedStatus));
         }
 
-        createCommitStatus(build, listener, sb.toString(), repo, GHCommitState.PENDING);
+        // Grab the queue status action for the build
+        GhprbUpdateQueueStatus updateStatusAction = build.getAction(GhprbUpdateQueueStatus.class);
+        if (updateStatusAction != null) {
+            synchronized (updateStatusAction) {
+                // Update bit.
+                updateStatusAction.setStarted();
+
+                createCommitStatus(build, listener, sb.toString(), repo, GHCommitState.PENDING);
+            }
+        }
+        else {
+            createCommitStatus(build, listener, sb.toString(), repo, GHCommitState.PENDING);
+        }
     }
 
     public void onBuildComplete(AbstractBuild<?, ?> build,
