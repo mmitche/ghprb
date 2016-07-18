@@ -157,9 +157,8 @@ public class GhprbSimpleStatus extends GhprbExtension implements GhprbCommitStat
             throw new GhprbCommitStatusException(e, state, message, prId);
         }
         
-        // Boolean updateQueuePosition = getDescriptor().getUpdateQueuePositionDefault(this);
+        Boolean updateQueuePosition = getDescriptor().getUpdateQueuePositionDefault(this);
         
-        Boolean updateQueuePosition = true;
         if (updateQueuePosition) {
             // If the user desires, create a new build action that will cause 
             // builds in the queue to update periodically.

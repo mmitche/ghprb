@@ -77,10 +77,27 @@ public class GhprbSimpleQueueStatusUpdater extends AsyncPeriodicWork {
         // Note that this is a snapshot.  We want to do our best to avoid
         // incorrect updates, etc.
         for (Queue.Item item : items) {
+            // 
+            // Grab the position in the queue for the particular label.
+            // The positions we are recording here are reversed, so we'll
+            // switch the position vs. the maximum queueLength for each label
+            // when we update the status.
+            Label assignedLabel = item.getAssignedLabel();
+            
+            if (assignedLabel == null) {
+                continue;
+            }
+            
+            int queuePosition = queueLengthsPerLabel.getOrDefault(assignedLabel, 0);
             // Find a GhprbUpdateQueueStatus item
             GhprbUpdateQueueStatus updateStatusAction = item.getAction(GhprbUpdateQueueStatus.class);
-
-            // If it's not GHPRB launched, go on to the next queue item
+            // Grab the position in the queue for the particular label.
+            // The positions we are recording here are reversed, so we'll
+            // switch the position vs. the maximum queueLength for each label
+            // when we update the status.
+            queueLengthsPerLabel.put(assignedLabel, queuePosition + 1);
+            
+            // If it's not GHPRB launched, go on to the next queue item.
             if (updateStatusAction == null) {
                 continue;
             }
@@ -92,12 +109,7 @@ public class GhprbSimpleQueueStatusUpdater extends AsyncPeriodicWork {
                 continue;
             }
             
-            // Grab the position in the queue for the particular label
-            Label assignedLabel = item.getAssignedLabel();
-            int queuePosition = queueLengthsPerLabel.getOrDefault(assignedLabel, 1);
-            queueLengthsPerLabel.put(assignedLabel, queuePosition + 1);
-            
-            updateEntries.add(new UpdateEntry(item, updateStatusAction, queuePosition));
+            updateEntries.add(new UpdateEntry(item, updateStatusAction, queuePosition + 1));
         }
         
         // Run the actual update
@@ -112,12 +124,14 @@ public class GhprbSimpleQueueStatusUpdater extends AsyncPeriodicWork {
                         continue;
                     }
 
+                    int queueLength = queueLengthsPerLabel.get(queueItem.getAssignedLabel());
+                    queuePosition = queueLength - queuePosition + 1;
                     StringBuilder sb = new StringBuilder();
                     sb.append(updateStatusAction.getMessage());
                     sb.append(" (");
                     sb.append(queuePosition);
                     sb.append("/");
-                    sb.append(queueLengthsPerLabel.get(queueItem.getAssignedLabel()));
+                    sb.append(queueLength);
                     sb.append(" on ");
                     sb.append(queueItem.getAssignedLabel().getName());
                     sb.append(")");
@@ -148,7 +162,7 @@ public class GhprbSimpleQueueStatusUpdater extends AsyncPeriodicWork {
 
     @Override
     public long getRecurrencePeriod() {
-        // Every 1 minute
-        return 30 * 1000;
+        // Every 5 minutes
+        return 5 * 60 * 1000;
     }
 }
