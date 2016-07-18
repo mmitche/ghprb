@@ -54,7 +54,8 @@ public class GhprbSimpleStatus extends GhprbExtension implements GhprbCommitStat
     }
 
     public GhprbSimpleStatus(String commitStatusContext) {
-        this(false, commitStatusContext, null, null, null, false, new ArrayList<GhprbBuildResultMessage>(0));
+        this(false, commitStatusContext, null, null, null, false, 
+             new ArrayList<GhprbBuildResultMessage>(0), false);
     }
 
     @DataBoundConstructor
@@ -156,12 +157,12 @@ public class GhprbSimpleStatus extends GhprbExtension implements GhprbCommitStat
             throw new GhprbCommitStatusException(e, state, message, prId);
         }
         
-        Boolean updateQueuePosition = getDescriptor().getUpdateQueuePositionDefault(this);
+        // Boolean updateQueuePosition = getDescriptor().getUpdateQueuePositionDefault(this);
         
+        Boolean updateQueuePosition = true;
         if (updateQueuePosition) {
             // If the user desires, create a new build action that will cause 
             // builds in the queue to update periodically.
-
             ArrayList<Action> newActions = new ArrayList<Action>();
             newActions.add(new GhprbUpdateQueueStatus(url, context, message, commitSha, ghRepository));
             return newActions;
@@ -333,7 +334,7 @@ public class GhprbSimpleStatus extends GhprbExtension implements GhprbCommitStat
         }
 
         public String getStartedStatusDefault(GhprbSimpleStatus local) {
-            return Ghprb.getDefaultValue(local, GhprbSimpleStatus.class, "");
+            return Ghprb.getDefaultValue(local, GhprbSimpleStatus.class, "getStartedStatus");
         }
         
         public Boolean getAddTestResultsDefault(GhprbSimpleStatus local) {
@@ -359,6 +360,5 @@ public class GhprbSimpleStatus extends GhprbExtension implements GhprbCommitStat
         public boolean addIfMissing() {
             return false;
         }
-
     }
 }

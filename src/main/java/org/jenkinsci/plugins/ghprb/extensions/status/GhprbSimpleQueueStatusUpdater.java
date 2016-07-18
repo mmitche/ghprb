@@ -116,7 +116,7 @@ public class GhprbSimpleQueueStatusUpdater extends AsyncPeriodicWork {
                     sb.append(updateStatusAction.getMessage());
                     sb.append(" (");
                     sb.append(queuePosition);
-                    sb.append(" of ");
+                    sb.append("/");
                     sb.append(queueLengthsPerLabel.get(queueItem.getAssignedLabel()));
                     sb.append(" on ");
                     sb.append(queueItem.getAssignedLabel().getName());
