@@ -212,13 +212,14 @@ public class GhprbRepositoryTest {
         verify(ghPullRequest, times(2)).getNumber();
         verify(ghPullRequest, times(1)).getUpdatedAt();
         verify(ghPullRequest, times(1)).getUser();
-        verify(ghPullRequest, times(1)).getBase();
+        verify(ghPullRequest, times(2)).getBase();
         verify(ghPullRequest, times(1)).getComments();
 //        verify(ghPullRequest, times(1)).getCommentsCount();
         verifyNoMoreInteractions(ghPullRequest);
 
         verify(helper).ifOnlyTriggerPhrase();
         verify(helper).getWhiteListTargetBranches();
+        verify(helper).getBlackListTargetBranches();
         verify(helper, times(2)).isProjectDisabled();
         verify(helper).checkSkipBuild(eq(ghPullRequest));
         verifyNoMoreInteractions(helper);
@@ -276,7 +277,7 @@ public class GhprbRepositoryTest {
         verify(ghPullRequest, times(3)).getUser();
         verify(ghPullRequest, times(1)).getMergeable(); // Call to Github API
         verify(ghPullRequest, times(7)).getHead();
-        verify(ghPullRequest, times(4)).getBase();
+        verify(ghPullRequest, times(6)).getBase();
         verify(ghPullRequest, times(5)).getNumber();
         verify(ghPullRequest, times(2)).getUpdatedAt();
         verify(ghPullRequest, times(1)).getCreatedAt();
@@ -290,6 +291,7 @@ public class GhprbRepositoryTest {
         verify(helper, times(2)).ifOnlyTriggerPhrase();
         verify(helper, times(1)).getBuilds();
         verify(helper, times(2)).getWhiteListTargetBranches();
+        verify(helper, times(2)).getBlackListTargetBranches();
         verify(helper, times(4)).isProjectDisabled();
         verify(helper, times(2)).checkSkipBuild(eq(ghPullRequest));
         verifyNoMoreInteractions(helper);
@@ -359,7 +361,7 @@ public class GhprbRepositoryTest {
         verify(ghPullRequest, times(5)).getUser();
         verify(ghPullRequest, times(1)).getMergeable(); // Call to Github API
         verify(ghPullRequest, times(7)).getHead();
-        verify(ghPullRequest, times(4)).getBase();
+        verify(ghPullRequest, times(6)).getBase();
         verify(ghPullRequest, times(5)).getNumber();
         verify(ghPullRequest, times(1)).getHtmlUrl();
         verify(ghPullRequest, times(2)).getUpdatedAt();
@@ -376,6 +378,7 @@ public class GhprbRepositoryTest {
         verify(helper, times(2)).ifOnlyTriggerPhrase();
         verify(helper, times(1)).getBuilds();
         verify(helper, times(2)).getWhiteListTargetBranches();
+        verify(helper, times(2)).getBlackListTargetBranches();
 
         // verify(helper).isBotUser(eq(ghUser));
         verify(helper).isWhitelistPhrase(eq("comment body"));
@@ -453,7 +456,7 @@ public class GhprbRepositoryTest {
         verify(ghPullRequest, times(5)).getUser();
         verify(ghPullRequest, times(2)).getMergeable(); // Call to Github API
         verify(ghPullRequest, times(9)).getHead();
-        verify(ghPullRequest, times(5)).getBase();
+        verify(ghPullRequest, times(7)).getBase();
         verify(ghPullRequest, times(5)).getNumber();
         verify(ghPullRequest, times(2)).getUpdatedAt();
         verify(ghPullRequest, times(1)).getCreatedAt();
@@ -471,6 +474,7 @@ public class GhprbRepositoryTest {
         verify(helper, times(2)).ifOnlyTriggerPhrase();
         verify(helper, times(2)).getBuilds();
         verify(helper, times(2)).getWhiteListTargetBranches();
+        verify(helper, times(2)).getBlackListTargetBranches();
 
         verify(helper).isWhitelistPhrase(eq("test this please"));
         verify(helper).isOktotestPhrase(eq("test this please"));

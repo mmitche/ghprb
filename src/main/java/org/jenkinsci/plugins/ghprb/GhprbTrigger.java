@@ -81,6 +81,7 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
     private Boolean autoCloseFailedPullRequests;
     private Boolean displayBuildErrorsOnDownstreamBuilds;
     private List<GhprbBranch> whiteListTargetBranches;
+    private List<GhprbBranch> blackListTargetBranches;
     private String gitHubAuthId;
     private String triggerPhrase;
     private String skipBuildPhrase;
@@ -132,6 +133,7 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
             String commentFilePath,
             String skipBuildPhrase,
             List<GhprbBranch> whiteListTargetBranches,
+            List<GhprbBranch> blackListTargetBranches,
             Boolean allowMembersOfWhitelistedOrgsAsAdmin, 
             String msgSuccess, 
             String msgFailure, 
@@ -153,6 +155,7 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
         this.displayBuildErrorsOnDownstreamBuilds = displayBuildErrorsOnDownstreamBuilds;
         this.skipBuildPhrase = skipBuildPhrase;
         this.whiteListTargetBranches = whiteListTargetBranches;
+        this.blackListTargetBranches = blackListTargetBranches;
         this.gitHubAuthId = gitHubAuthId;
         this.allowMembersOfWhitelistedOrgsAsAdmin = allowMembersOfWhitelistedOrgsAsAdmin;
         this.buildDescTemplate = buildDescTemplate;
@@ -252,7 +255,7 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
                 new String[] { name, String.valueOf(newInstance) });
 
         helper = new Ghprb(this);
-        
+
         if (getUseGitHubHooks()) {
             if (GhprbTrigger.getDscp().getManageWebhooks()) {
                 this.repository.createHook();
@@ -525,11 +528,21 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
         return displayBuildErrorsOnDownstreamBuilds;
     }
 
-    public List<GhprbBranch> getWhiteListTargetBranches() {
-        if (whiteListTargetBranches == null) {
+    private List<GhprbBranch> normalizeTargetBranches(List<GhprbBranch> branches) {
+        if (branches == null || 
+                (branches.size() == 1 && branches.get(0).getBranch().equals(""))) {
             return new ArrayList<GhprbBranch>();
+        } else {
+            return branches;
         }
-        return whiteListTargetBranches;
+    }
+
+    public List<GhprbBranch> getWhiteListTargetBranches() {
+        return normalizeTargetBranches(whiteListTargetBranches);
+    }
+
+    public List<GhprbBranch> getBlackListTargetBranches() {
+        return normalizeTargetBranches(blackListTargetBranches);
     }
 
     @Override
@@ -638,6 +651,7 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
         private Boolean manageWebhooks = true;
         private GHCommitState unstableAs = GHCommitState.FAILURE;
         private List<GhprbBranch> whiteListTargetBranches;
+        private List<GhprbBranch> blackListTargetBranches;
         private Boolean autoCloseFailedPullRequests = false;
         private Boolean displayBuildErrorsOnDownstreamBuilds = false;
         
@@ -933,6 +947,9 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
             return whiteListTargetBranches;
         }
         
+        public List<GhprbBranch> getBlackListTargetBranches() {
+            return blackListTargetBranches;
+        }
 
         @Deprecated
         private transient String publishedURL;
