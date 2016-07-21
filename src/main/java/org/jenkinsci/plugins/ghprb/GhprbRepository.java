@@ -382,6 +382,8 @@ public class GhprbRepository implements Saveable{
             GhprbPullRequest pull = getPullRequest(ghpr, number);
             pull.check(ghpr, true);
             doSave = true;
+        } else if ("labeled".equals(action) || "unlabeled".equals(action)) {
+            // Nothign to do.
         } else {
             logger.log(Level.WARNING, "Unknown Pull Request hook action: {0}", action);
         }
