@@ -60,12 +60,12 @@ public class GhprbSimpleQueueStatusUpdater extends AsyncPeriodicWork {
         }
     }
     
+    private static final Random randomSleepTimes = new Random();
+    private static final long MINSLEEPTIME = 1000;
+    private static final long MAXSLEEPTIME = 2000;
+    
     @Override
     public void execute(TaskListener listener) {
-        Random random = new Random();
-        LongStream randomSleepTimesStream = random.longs(500,1500);
-        OfLong randomSleepTimes = randomSleepTimesStream.iterator();
-        
         // Get a queue snapshot
         Queue queue = Jenkins.getInstance().getQueue();
         List<Queue.Item> items = queue.getApproximateItemsQuickly();
@@ -140,9 +140,11 @@ public class GhprbSimpleQueueStatusUpdater extends AsyncPeriodicWork {
                             GHCommitState.PENDING, updateStatusAction.getUrl(), message, updateStatusAction.getContext());
 
                     try {
-                        // Sleep for a random time between .5 and 1.5 seconds before attempting to 
+                        // Sleep for a random time between 1 and 2 seconds before attempting to 
                         // run another update to avoid API rate limit issues.
-                        Thread.sleep(randomSleepTimes.next());
+                        long sleepTime = (randomSleepTimes.nextLong() % (MAXSLEEPTIME - MINSLEEPTIME)) + 
+                            MINSLEEPTIME;
+                        Thread.sleep(sleepTime);
                     }
                     catch (InterruptedException e) {
                         // We were interrupted here....break from the loop
@@ -154,10 +156,6 @@ public class GhprbSimpleQueueStatusUpdater extends AsyncPeriodicWork {
                 LOGGER.log(Level.SEVERE, "Couldn't update queue status.", e);
             }
         }
-    }
-
-    public void updateStatus(GhprbUpdateQueueStatus updateStatusAction, int queuePosition, int queueLength) throws IOException {
-        
     }
 
     @Override
