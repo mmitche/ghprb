@@ -88,7 +88,10 @@ public class GhprbSimpleQueueStatusUpdater extends AsyncPeriodicWork {
                 continue;
             }
             
-            int queuePosition = queueLengthsPerLabel.getOrDefault(assignedLabel, 0);
+            int queuePosition = 0;
+            if (queueLengthsPerLabel.containsKey(assignedLabel)) {
+                queuePosition = queueLengthsPerLabel.get(assignedLabel);
+            }
             // Find a GhprbUpdateQueueStatus item
             GhprbUpdateQueueStatus updateStatusAction = item.getAction(GhprbUpdateQueueStatus.class);
             // Grab the position in the queue for the particular label.
