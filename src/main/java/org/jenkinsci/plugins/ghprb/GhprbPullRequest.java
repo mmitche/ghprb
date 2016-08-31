@@ -401,7 +401,7 @@ public class GhprbPullRequest {
 
         logger.log(Level.FINEST, "[{0}] Added comment: {1}", new Object[] { sender.getName(), body });
 
-        if (!helper.isIgnoreBotUser() && helper.isBotUser(sender)) {
+        if (helper.isIgnoreBotUser() && helper.isBotUser(sender)) {
             logger.log(Level.INFO, "Comment from bot user {0} ignored.", sender);
             return;
         }
