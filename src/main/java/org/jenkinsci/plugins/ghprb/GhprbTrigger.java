@@ -282,7 +282,6 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
     public void run() {
         // triggers are always triggered on the cron, but we just no-op if we are using GitHub hooks.
         if (getUseGitHubHooks()) {
-            logger.log(Level.FINE, "Use webHooks is set, so not running trigger");
             return;
         }
 
@@ -648,6 +647,7 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
         private String cron = "H/5 * * * *";
         private Boolean useComments = false;
         private Boolean useDetailedComments = false;
+        private Boolean ignoreCommentsFromBotUser = false;
         private Boolean manageWebhooks = true;
         private GHCommitState unstableAs = GHCommitState.FAILURE;
         private List<GhprbBranch> whiteListTargetBranches;
@@ -762,6 +762,7 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
             cron = formData.getString("cron");
             useComments = formData.getBoolean("useComments");
             useDetailedComments = formData.getBoolean("useDetailedComments");
+            ignoreCommentsFromBotUser = formData.getBoolean("ignoreCommentsFromBotUser");
             manageWebhooks = formData.getBoolean("manageWebhooks");
             unstableAs = GHCommitState.valueOf(formData.getString("unstableAs"));
             autoCloseFailedPullRequests = formData.getBoolean("autoCloseFailedPullRequests");
@@ -843,6 +844,10 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
         public Boolean getUseDetailedComments() {
             return useDetailedComments;
         }
+        
+        public Boolean getIgnoreCommentsFromBotUser() {
+            return ignoreCommentsFromBotUser;
+        }
 
         public Boolean getManageWebhooks() {
             return manageWebhooks;
@@ -870,6 +875,10 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
 
         public boolean isUseDetailedComments() {
             return (useDetailedComments != null && useDetailedComments);
+        }
+        
+        public boolean isIgnoreCommentsFromBotUser() {
+            return (ignoreCommentsFromBotUser != null && ignoreCommentsFromBotUser);
         }
         
         public ListBoxModel doFillGitHubAuthIdItems(@QueryParameter("gitHubAuthId") String gitHubAuthId) {
