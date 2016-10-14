@@ -251,11 +251,12 @@ public class GhprbPullRequest {
                 // check that comment.  Otherwise check the full set since the last
                 // time we updated (which might have just happened).
                 int commentsChecked = 0;
-                if (wasUpdated && (!isWebhook || !initialCommentCheckDone)) {
+                /*if (wasUpdated && (!isWebhook || !initialCommentCheckDone)) {
                     initialCommentCheckDone = true;
+                    // Temporarily disable initial comment check
                     commentsChecked = checkComments(pullRequest, lastUpdateTime);
                 }
-                else if (comment != null) {
+                else */if (comment != null) {
                     checkComment(comment);
                     commentsChecked = 1;
                 }
@@ -630,12 +631,13 @@ public class GhprbPullRequest {
      */
     public GHPullRequest getPullRequest(boolean force) throws IOException {
         if (this.pr == null || force) {
-            setPullRequest(repo.getActualPullRequest(this.id));
+            // Unless force is set to true, grab the GHPullRequest 
+            setPullRequest(GhprbRootAction.getPullRequest(this.id, this.pr, force, repo.getGitHubRepo()));
         }
         return pr;
     }
     
-    private void setPullRequest(GHPullRequest pr) {
+    public void setPullRequest(GHPullRequest pr) {
         if (pr == null) {
             return;
         }

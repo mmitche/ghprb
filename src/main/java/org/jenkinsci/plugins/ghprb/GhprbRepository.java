@@ -336,7 +336,7 @@ public class GhprbRepository implements Saveable{
         }
         int number = issueComment.getIssue().getNumber();
         logger.log(Level.FINER, "Comment on issue #{0} from {1}: {2}",
-                new Object[] { number, issueComment.getComment().getUser(), issueComment.getComment().getBody() });
+                new Object[] { number, issueComment.getComment().getUserName(), issueComment.getComment().getBody() });
         
         if (!"created".equals(issueComment.getAction())) {
             return;
@@ -360,7 +360,7 @@ public class GhprbRepository implements Saveable{
             if (pr == null) {
                 if (ghpr == null) {
                     GHRepository repo = getGitHubRepo();
-                    ghpr = repo.getPullRequest(number);
+                    ghpr = GhprbRootAction.getPullRequest(number, ghpr, false, this.getGitHubRepo());
                 }
                 pr = new GhprbPullRequest(ghpr, trigger.getHelper(), this);
                 pullRequests.put(number, pr);

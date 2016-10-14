@@ -23,7 +23,9 @@ import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.ExecutorService;
@@ -35,6 +37,8 @@ import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import org.kohsuke.github.GHPullRequest;
+import org.kohsuke.github.GHRepository;
 
 /**
  * @author Honza Brázdil jbrazdil@redhat.com
@@ -46,6 +50,26 @@ public class GhprbRootAction implements UnprotectedRootAction {
     
     private Set<StartTrigger> triggerThreads;
     private ExecutorService pool;
+    
+    // TEMPORARY
+    private static final Map<Integer, GHPullRequest> prMap = new HashMap<Integer, GHPullRequest>();
+    
+    public static synchronized GHPullRequest getPullRequest(int id, GHPullRequest pr, boolean force, GHRepository repo) throws IOException {
+        if (pr != null && !force) {
+            prMap.put(id, pr);
+            return pr;
+        }
+        
+        // If force, then always pull.  Otherwise return what's in the map.
+        if (force || !prMap.containsKey(id)) {
+            GHPullRequest newPr = repo.getPullRequest(id);
+            prMap.put(id, newPr);
+            return newPr;
+        }
+        else {
+            return prMap.get(id);
+        }
+    }
 
     public String getIconFileName() {
         return null;
