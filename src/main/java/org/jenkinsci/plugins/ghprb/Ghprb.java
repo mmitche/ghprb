@@ -156,7 +156,17 @@ public class Ghprb {
         }
         return null;
     }
-    
+
+    public Set<String> getLabelsIgnoreList() {
+        String labelsField = getTrigger().getLabelsIgnoreList();
+        Set<String> labels = new HashSet<String>();
+        if (labelsField != null) {
+            String[] split = labelsField.split("\\n+");
+            Collections.addAll(labels, split);
+        }
+        return labels;
+    }
+
     private Pattern whitelistPhrasePattern() {
         return compilePattern(trigger.getDescriptor().getWhitelistPhrase());
     }
@@ -448,7 +458,7 @@ public class Ghprb {
         
         List<StandardCredentials> credentials;
         
-        logger.log(Level.FINE, "Using null context because of issues not getting all credentias");
+        logger.log(Level.FINE, "Using null context because of issues not getting all credentials");
         
         credentials = CredentialsProvider.lookupCredentials(StandardCredentials.class, (Item) null, ACL.SYSTEM,
                 URIRequirementBuilder.fromUri(uri).build());

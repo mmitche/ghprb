@@ -42,4 +42,16 @@ class GhprbExtensionContext implements Context {
                 context.completedStatus
         ));
     }
+    
+    /**
+     * Adds build result messages
+     */
+    void buildStatus(Runnable closure) {
+        GhprbBuildStatusContext context = new GhprbBuildStatusContext();
+        ContextExtensionPoint.executeInContext(closure, context);
+        
+        extensions.add(new GhprbBuildStatus(
+                context.completedStatus
+        ));
+    }
 }
