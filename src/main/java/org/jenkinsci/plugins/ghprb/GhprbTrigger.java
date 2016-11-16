@@ -51,6 +51,7 @@ import javax.servlet.ServletException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -78,20 +79,24 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
     private final Boolean useGitHubHooks;
     private final Boolean permitAll;
     private String whitelist;
-    private Boolean autoCloseFailedPullRequests;
-    private Boolean displayBuildErrorsOnDownstreamBuilds;
-    private List<GhprbBranch> whiteListTargetBranches;
-    private List<GhprbBranch> blackListTargetBranches;
+    private final Boolean autoCloseFailedPullRequests;
+    private final Boolean displayBuildErrorsOnDownstreamBuilds;
+    private final List<GhprbBranch> whiteListTargetBranches;
+    private final List<GhprbBranch> blackListTargetBranches;
     private String gitHubAuthId;
-    private String triggerPhrase;
-    private String skipBuildPhrase;
-    private String labelsIgnoreList;
+    private final String triggerPhrase;
+    private final String skipBuildPhrase;
+    private final String labelsIgnoreList;
+    private final String includeFilterFileGlob;
+    private final String excludeFilterFileGlob;    
+    private final String prNumberFilters;
     
-
     private transient Ghprb helper;
     private transient GhprbRepository repository;
     private transient GhprbBuilds builds;
     private transient GhprbGitHub ghprbGitHub;
+    // For efficiency
+    private transient Set<Integer> prNumberFilterSet;
     
     private DescribableList<GhprbExtension, GhprbExtensionDescriptor> extensions = new DescribableList<GhprbExtension, GhprbExtensionDescriptor>(Saveable.NOOP);
     
@@ -142,6 +147,9 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
             String gitHubAuthId,
             String buildDescTemplate,
             String labelsIgnoreList,
+            String includeFilterFileGlob,
+            String excludeFilterFileGlob,
+            String prNumberFilters,
             List<GhprbExtension> extensions
             ) throws ANTLRException {
         super(cron);
@@ -162,6 +170,10 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
         this.allowMembersOfWhitelistedOrgsAsAdmin = allowMembersOfWhitelistedOrgsAsAdmin;
         this.buildDescTemplate = buildDescTemplate;
         this.labelsIgnoreList = labelsIgnoreList;
+        this.prNumberFilters = prNumberFilters;
+        this.prNumberFilterSet = null;
+        this.includeFilterFileGlob = includeFilterFileGlob;
+        this.excludeFilterFileGlob = excludeFilterFileGlob;
         setExtensions(extensions);
         configVersion = latestVersion;
     }
@@ -451,6 +463,53 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
         return buildDescTemplate == null ? "" : buildDescTemplate;
     }
 
+    /**
+     * If non-null, trigger should only run if one or more files changed
+     * in the PR matches this pattern.
+     * @return 
+     */
+    public String getIncludeFilterFileGlob() {
+        return includeFilterFileGlob;
+    }
+
+    /**
+     * If non-null, trigger should only run if all files do not match this pattern
+     * @return 
+     */
+    public String getExcludeFilterFileGlob() {
+        return excludeFilterFileGlob;
+    }
+
+    /**
+     * Returns the set of PR numbers that the trigger should run for, or null
+     * @return Null if there is no restriction, a non-empty set otherwise.
+     */
+    public Set<Integer> getPRNumberFilterSet() {
+        if (prNumberFilterSet != null) {
+            return prNumberFilterSet;
+        }
+        if (StringUtils.isEmpty(prNumberFilters)) {
+            return null;
+        }
+        // Parse out, comma separated
+        prNumberFilterSet = new HashSet<Integer>();
+        String[] split = prNumberFilters.split("\\n+");
+        for (String prNumber : split) {
+            try {
+                prNumberFilterSet.add(Integer.parseInt(prNumber));
+            }
+            catch (NumberFormatException e) {
+                logger.log(Level.WARNING, "PR Number filter element {0} in job trigger {1} is invalid, skipping: {2}", 
+                    new Object [] { prNumber, getProjectName(), e });
+            }
+        }
+        return prNumberFilterSet;
+    }
+
+    public String getPRNumberFilters() {
+        return prNumberFilters;
+    }
+    
     public String getAdminlist() {
         if (adminlist == null) {
             return "";
@@ -776,6 +835,9 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
             autoCloseFailedPullRequests = formData.getBoolean("autoCloseFailedPullRequests");
             displayBuildErrorsOnDownstreamBuilds = formData.getBoolean("displayBuildErrorsOnDownstreamBuilds");
             labelsIgnoreList = formData.getString("labelsIgnoreList");
+            labelsIgnoreList = formData.getString("labelsIgnoreList");
+            labelsIgnoreList = formData.getString("labelsIgnoreList");
+            labelsIgnoreList = formData.getString("labelsIgnoreList");
             
             githubAuth = req.bindJSONToList(GhprbGitHubAuth.class, formData.get("githubAuth"));
             
@@ -893,6 +955,8 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
         public boolean isIgnoreCommentsFromBotUser() {
             return (ignoreCommentsFromBotUser != null && ignoreCommentsFromBotUser);
         }
+        
+        
         
         public ListBoxModel doFillGitHubAuthIdItems(@QueryParameter("gitHubAuthId") String gitHubAuthId) {
             ListBoxModel model = new ListBoxModel();

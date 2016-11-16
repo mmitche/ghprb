@@ -45,6 +45,10 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import org.apache.commons.lang.NotImplementedException;
+import org.kohsuke.github.GHPullRequest;
+import org.kohsuke.github.GHPullRequestFileDetail;
+import org.springframework.util.AntPathMatcher;
 
 /**
  * @author janinko
@@ -156,6 +160,62 @@ public class Ghprb {
         }
         return null;
     }
+    
+    /**
+     * Check a PR's changed files against the include/exclude glob patterns
+     * @param pr PR to check
+     * @return True if the PR passes the filter, false otherwise
+     */
+    public boolean checkFileFilter(GHPullRequest pr) {
+        String includeFilterGlob = trigger.getIncludeFilterFileGlob();
+        String excludeFilterGlob = trigger.getIncludeFilterFileGlob();
+        
+        if (includeFilterGlob == null && excludeFilterGlob == null) {
+            return true;
+        }
+        
+        if (pr == null) {
+            throw new NotImplementedException("What do you do here?");
+        }
+        logger.log(Level.INFO, "Checking pr {0} against include pattern {1} and exclude pattern {2}",
+            new Object[] {pr.getNumber(), includeFilterGlob, excludeFilterGlob});
+        List<GHPullRequestFileDetail> changedFiles = pr.listFiles().asList();
+        
+        AntPathMatcher matcher = new AntPathMatcher();
+        if (includeFilterGlob != null) {
+            boolean matchesInclude = false;
+            for (GHPullRequestFileDetail file : changedFiles) {
+                String changedFile = file.getFilename();
+                if (matcher.match(includeFilterGlob, changedFile)) {
+                    // Done, can stop
+                    matchesInclude = true;
+                    break;
+                }
+            }
+            
+            if (!matchesInclude) {
+                logger.log(Level.INFO, "No file in PR {0} matches include pattern {1}, skipping build",
+                    new Object[] {pr.getNumber(), includeFilterGlob});
+                return false;
+            }
+        }
+        
+        if (excludeFilterGlob != null) {
+            for (GHPullRequestFileDetail file : changedFiles) {
+                String changedFile = file.getFilename();
+                if (matcher.match(excludeFilterGlob, changedFile)) {
+                    // File X matches the exclude glob, skipping
+                    logger.log(Level.INFO, "File {0} in PR {1} matches exclude pattern {2}, skipping build",
+                        new Object[] {changedFile, pr.getNumber(), excludeFilterGlob});
+                    return false;
+                }
+            }
+        }
+        
+        // No filters didn't match, can run build
+        logger.log(Level.INFO, "All file filters passed for PR {0}", pr.getNumber());
+        return true;
+    }
 
     public Set<String> getLabelsIgnoreList() {
         String labelsField = getTrigger().getLabelsIgnoreList();
@@ -165,6 +225,15 @@ public class Ghprb {
             Collections.addAll(labels, split);
         }
         return labels;
+    }
+    
+    /**
+     * Returns the set of PR numbers this trigger should run for/
+     * If null, all PRs should run.
+     * @return 
+     */
+    public Set<Integer> getPRNumberFilterList() {
+       return getTrigger().getPRNumberFilterSet();
     }
 
     private Pattern whitelistPhrasePattern() {

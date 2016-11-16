@@ -171,6 +171,7 @@ public class GhprbPullRequest {
         updatePR(ghpr, null /*GHIssueComment*/, isWebhook);
         checkSkipBuild();
         checkLabels();
+        checkPRNumberFilter();
         tryBuild();
     }
 
@@ -190,6 +191,20 @@ public class GhprbPullRequest {
             } catch(IOException e) {
                 logger.log(Level.SEVERE, "Failed to read labels", e);
             }
+        }
+    }
+    
+    private void checkPRNumberFilter() {
+        Set<Integer> prNumbersToRun = helper.getPRNumberFilterList();
+        if (prNumbersToRun == null) {
+            // No change
+            return;
+        }
+        if (!prNumbersToRun.contains(this.getId())) {
+            logger.log(Level.INFO,
+                    "Did not find {0} in PR number filter list for project {1}, pull request will be ignored.",
+                    new Object [] { this.getId(), helper.getTrigger().getProjectName() });
+            shouldRun = false;
         }
     }
 
@@ -214,6 +229,7 @@ public class GhprbPullRequest {
         updatePR(null /*GHPullRequest*/, comment, true);
         checkSkipBuild();
         checkLabels();
+        checkPRNumberFilter();
         tryBuild();
     }
     
@@ -362,6 +378,12 @@ public class GhprbPullRequest {
                 logger.log(Level.FINEST, "Branch is not whitelisted or is blacklisted, skipping the build");
                 return;
             }
+            
+            // Check whether this is filtered set of files
+            if (shouldRun && !helper.checkFileFilter(pr)) {
+                return;
+            }
+            
             if (shouldRun) {
                 shouldRun = false; // Change the shouldRun flag as soon as we decide to build.
                 logger.log(Level.FINEST, "Running the build");
