@@ -195,12 +195,12 @@ public class GhprbPullRequest {
     }
     
     private void checkPRNumberFilter() {
-        Set<Integer> prNumbersToRun = helper.getPRNumberFilterList();
-        if (prNumbersToRun == null) {
+        Integer prNumberToRun = helper.getPRNumberFilter();
+        if (prNumberToRun == null) {
             // No change
             return;
         }
-        if (!prNumbersToRun.contains(this.getId())) {
+        if (prNumberToRun != this.getId()) {
             logger.log(Level.INFO,
                     "Did not find {0} in PR number filter list for project {1}, pull request will be ignored.",
                     new Object [] { this.getId(), helper.getTrigger().getProjectName() });
@@ -376,12 +376,12 @@ public class GhprbPullRequest {
 
             if (!isAllowedTargetBranch()) {
                 logger.log(Level.FINEST, "Branch is not whitelisted or is blacklisted, skipping the build");
-                return;
+                shouldRun = false;
             }
             
             // Check whether this is filtered set of files
             if (shouldRun && !helper.checkFileFilter(pr)) {
-                return;
+                shouldRun = false;
             }
             
             if (shouldRun) {

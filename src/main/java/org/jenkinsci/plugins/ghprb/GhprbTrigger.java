@@ -87,9 +87,9 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
     private final String triggerPhrase;
     private final String skipBuildPhrase;
     private final String labelsIgnoreList;
-    private final String includeFilterFileGlob;
-    private final String excludeFilterFileGlob;    
-    private final String prNumberFilters;
+    private final String includeFileFilterGlob;
+    private final String excludeFileFilterGlob;    
+    private final Integer prNumberFilter;
     
     private transient Ghprb helper;
     private transient GhprbRepository repository;
@@ -149,7 +149,7 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
             String labelsIgnoreList,
             String includeFilterFileGlob,
             String excludeFilterFileGlob,
-            String prNumberFilters,
+            Integer prNumberFilter,
             List<GhprbExtension> extensions
             ) throws ANTLRException {
         super(cron);
@@ -170,10 +170,10 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
         this.allowMembersOfWhitelistedOrgsAsAdmin = allowMembersOfWhitelistedOrgsAsAdmin;
         this.buildDescTemplate = buildDescTemplate;
         this.labelsIgnoreList = labelsIgnoreList;
-        this.prNumberFilters = prNumberFilters;
+        this.prNumberFilter = prNumberFilter;
         this.prNumberFilterSet = null;
-        this.includeFilterFileGlob = includeFilterFileGlob;
-        this.excludeFilterFileGlob = excludeFilterFileGlob;
+        this.includeFileFilterGlob = includeFilterFileGlob;
+        this.excludeFileFilterGlob = excludeFilterFileGlob;
         setExtensions(extensions);
         configVersion = latestVersion;
     }
@@ -468,46 +468,24 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
      * in the PR matches this pattern.
      * @return 
      */
-    public String getIncludeFilterFileGlob() {
-        return includeFilterFileGlob;
+    public String getIncludeFileFilterGlob() {
+        return includeFileFilterGlob;
     }
 
     /**
      * If non-null, trigger should only run if all files do not match this pattern
      * @return 
      */
-    public String getExcludeFilterFileGlob() {
-        return excludeFilterFileGlob;
+    public String getExcludeFileFilterGlob() {
+        return excludeFileFilterGlob;
     }
 
     /**
-     * Returns the set of PR numbers that the trigger should run for, or null
-     * @return Null if there is no restriction, a non-empty set otherwise.
+     * Returns the PR number that this trigger should apply to
+     * @return Null if there is no restriction, valid number otherwise.
      */
-    public Set<Integer> getPRNumberFilterSet() {
-        if (prNumberFilterSet != null) {
-            return prNumberFilterSet;
-        }
-        if (StringUtils.isEmpty(prNumberFilters)) {
-            return null;
-        }
-        // Parse out, comma separated
-        prNumberFilterSet = new HashSet<Integer>();
-        String[] split = prNumberFilters.split("\\n+");
-        for (String prNumber : split) {
-            try {
-                prNumberFilterSet.add(Integer.parseInt(prNumber));
-            }
-            catch (NumberFormatException e) {
-                logger.log(Level.WARNING, "PR Number filter element {0} in job trigger {1} is invalid, skipping: {2}", 
-                    new Object [] { prNumber, getProjectName(), e });
-            }
-        }
-        return prNumberFilterSet;
-    }
-
-    public String getPRNumberFilters() {
-        return prNumberFilters;
+    public Integer getPRNumberFilter() {
+        return prNumberFilter;
     }
     
     public String getAdminlist() {

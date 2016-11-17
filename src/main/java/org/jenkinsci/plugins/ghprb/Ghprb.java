@@ -161,14 +161,22 @@ public class Ghprb {
         return null;
     }
     
+    public String getIncludeFileFilterGlob() {
+        return getTrigger().getIncludeFileFilterGlob();
+    }
+    
+    public String getExcludeFileFilterGlob() {
+        return getTrigger().getExcludeFileFilterGlob();
+    }
+    
     /**
      * Check a PR's changed files against the include/exclude glob patterns
      * @param pr PR to check
      * @return True if the PR passes the filter, false otherwise
      */
     public boolean checkFileFilter(GHPullRequest pr) {
-        String includeFilterGlob = trigger.getIncludeFilterFileGlob();
-        String excludeFilterGlob = trigger.getIncludeFilterFileGlob();
+        String includeFilterGlob = getIncludeFileFilterGlob();
+        String excludeFilterGlob = getExcludeFileFilterGlob();
         
         if (includeFilterGlob == null && excludeFilterGlob == null) {
             return true;
@@ -232,8 +240,8 @@ public class Ghprb {
      * If null, all PRs should run.
      * @return 
      */
-    public Set<Integer> getPRNumberFilterList() {
-       return getTrigger().getPRNumberFilterSet();
+    public Integer getPRNumberFilter() {
+       return getTrigger().getPRNumberFilter();
     }
 
     private Pattern whitelistPhrasePattern() {

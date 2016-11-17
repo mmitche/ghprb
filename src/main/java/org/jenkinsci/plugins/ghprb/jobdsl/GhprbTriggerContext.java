@@ -5,6 +5,7 @@ import javaposse.jobdsl.plugin.ContextExtensionPoint;
 import org.jenkinsci.plugins.ghprb.GhprbBranch;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 class GhprbTriggerContext implements Context {
@@ -13,6 +14,9 @@ class GhprbTriggerContext implements Context {
     List<String> orgWhitelist = new ArrayList<String>();
     List<GhprbBranch> whiteListTargetBranches = new ArrayList<GhprbBranch>();
     List<GhprbBranch> blackListTargetBranches = new ArrayList<GhprbBranch>();
+    Integer includePRNumberFilter = null;
+    List<String> includeFileFilterGlobs = new ArrayList<String>();
+    List<String> excludeFileFilterGlobs = new ArrayList<String>();
     String cron = "H/5 * * * *";
     String triggerPhrase;
     String skipBuildPhrase;
@@ -103,6 +107,50 @@ class GhprbTriggerContext implements Context {
         for (String branch : branches) {
             blackListTargetBranches.add(new GhprbBranch(branch));
         }
+    }
+    
+    /**
+     * Adds a glob to the include list
+     * @param glob 
+     */
+    public void includeFile(String glob) {
+        includeFileFilterGlobs.add(glob);
+    }
+    
+    /**
+     * Adds a glob to the exclude list
+     * @param glob 
+     */
+    public void excludeFile(String glob) {
+        excludeFileFilterGlobs.add(glob);
+    }
+    
+    /**
+     * Adds a set of globs to the include list
+     * @param globs 
+     */
+    public void includeFiles(Iterable<String> globs) {
+        for (String glob : globs) {
+            includeFileFilterGlobs.add(glob);
+        }
+    }
+    
+    /**
+     * Adds a set of globs to the exclude list
+     * @param globs 
+     */
+    public void excludeFile(Iterable<String> globs) {
+        for (String glob : globs) {
+            excludeFileFilterGlobs.add(glob);
+        }
+    }
+    
+    /**
+     * Includes a specific PR number for this job
+     * @param number number or Null.
+     */
+    public void includePRNumber(Integer number) {
+        includePRNumberFilter = number;
     }
 
     /**

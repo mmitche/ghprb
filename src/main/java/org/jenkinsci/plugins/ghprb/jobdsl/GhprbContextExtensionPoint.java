@@ -41,6 +41,11 @@ public class GhprbContextExtensionPoint extends ContextExtensionPoint {
                 null,
                 null,
                 context.buildDescriptionTemplate,
+                context.includeFileFilterGlobs.isEmpty() ? null :
+                    Joiner.on("\n").join(context.includeFileFilterGlobs),
+                context.excludeFileFilterGlobs.isEmpty() ? null :
+                    Joiner.on("\n").join(context.excludeFileFilterGlobs),
+                context.includePRNumberFilter,
                 context.extensionContext.extensions
         );
     }

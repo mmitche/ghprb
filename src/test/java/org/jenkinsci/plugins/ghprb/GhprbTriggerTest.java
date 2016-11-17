@@ -6,9 +6,11 @@ import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -22,6 +24,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.kohsuke.github.GHPullRequest;
+import org.kohsuke.github.GHPullRequestFileDetail;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
@@ -51,6 +54,44 @@ public class GhprbTriggerTest {
                 assertThat(trigger.getExtensions().contains(ext));
             }
         }
+    }
+    
+    @Test
+    public void testOnlyIncludeFilesBuild() throws Exception {
+        GHPullRequest issue = mock(GHPullRequest.class);
+        
+        String buildIncludeBlob = "foo.txt";
+        String buildExcludeBlob = null;
+        List<String> filesInPR = new ArrayList<String>();
+        filesInPR.add("foo.txt");
+        
+        Method checkFileFilter = GhprbPullRequest.class.getDeclaredMethod("checkFileFilter");
+        checkFileFilter.setAccessible(true);
+        
+        Field prField = GhprbPullRequest.class.getDeclaredField("pr");
+        prField.setAccessible(true);
+        prField.set(pr, issue);
+        
+        Field shouldRun = GhprbPullRequest.class.getDeclaredField("shouldRun");
+        shouldRun.setAccessible(true);
+        
+        Field prHelper = GhprbPullRequest.class.getDeclaredField("helper");
+        prHelper.setAccessible(true);
+        prHelper.set(pr, helper);
+     
+        List<GHPullRequestFileDetail> changedFiles = new ArrayList<GHPullRequestFileDetail>();
+        for (String file : filesInPR) {
+            GHPullRequestFileDetail fileDetail = new GHPullRequestFileDetail();
+            given(fileDetail.getFilename()).willReturn(file);
+            changedFiles.add(fileDetail);
+        }
+                
+        given(pr.getPullRequest().listFiles().asList()).willReturn(changedFiles);
+        given(helper.getIncludeFileFilterGlob()).willReturn(buildIncludeBlob);
+        given(helper.getExcludeFileFilterGlob()).willReturn(buildExcludeBlob);
+        boolean result = (Boolean) checkFileFilter.invoke(issue);
+        
+        assertThat(result).isTrue();
     }
 
     @Test
