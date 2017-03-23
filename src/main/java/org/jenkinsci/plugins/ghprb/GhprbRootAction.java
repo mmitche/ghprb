@@ -67,7 +67,16 @@ public class GhprbRootAction implements UnprotectedRootAction {
             return newPr;
         }
         else {
-            return prMap.get(id);
+            GHPullRequest prInfo = prMap.get(id);
+            // Check that it's the same repo
+            if (!prInfo.getRepository().getFullName().equals(repo.getFullName())) {
+                GHPullRequest newPr = repo.getPullRequest(id);
+                prMap.put(id, newPr);
+                return newPr;
+            }
+            else {
+                return prInfo;
+            }
         }
     }
 
