@@ -112,8 +112,8 @@ public class GhprbPullRequestMerge extends Recorder implements SimpleBuildStep {
         // ignore comments from bot user, this fixes an issue where the bot would auto-merge
         // a PR when the 'request for testing' phrase contains the PR merge trigger phrase and
         // the bot is a member of a whitelisted organization
-        if (helper.isBotUser(triggerSender)) {
-            listener.getLogger().println("Comment from bot user " + triggerSender.getLogin() + " ignored.");
+        if (helper.isIgnoreBotUser() && helper.isBotUser(triggerSender)) {
+			listener.getLogger().println("Comment from bot user " + triggerSender.getLogin() + " ignored.");
             return;
         }
 
