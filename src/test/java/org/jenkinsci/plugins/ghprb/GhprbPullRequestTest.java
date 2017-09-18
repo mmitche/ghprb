@@ -148,6 +148,7 @@ public class GhprbPullRequestTest {
         verify(pr, times(1)).getNumber();
         verify(pr, times(1)).getCreatedAt();
         verify(pr, times(2)).getUser();
+        verify(pr, times(1)).getCommentsCount();
         Mockito.verifyNoMoreInteractions(pr);
 
     }
