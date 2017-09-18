@@ -3,9 +3,11 @@ package org.jenkinsci.plugins.ghprb.extensions.status;
 import hudson.Extension;
 import hudson.Util;
 import hudson.matrix.MatrixProject;
+import hudson.model.Action;
 import hudson.model.Job;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+
 import jenkins.model.Jenkins;
 
 import org.apache.commons.lang.StringUtils;
@@ -44,6 +46,7 @@ public class GhprbSimpleStatus extends GhprbExtension implements GhprbCommitStat
     private final String startedStatus;
     private final String statusUrl;
     private final Boolean addTestResults;
+    private final Boolean updateQueuePosition;
     private final List<GhprbBuildResultMessage> completedStatus;
 
     public GhprbSimpleStatus() {
@@ -51,7 +54,8 @@ public class GhprbSimpleStatus extends GhprbExtension implements GhprbCommitStat
     }
 
     public GhprbSimpleStatus(String commitStatusContext) {
-        this(false, commitStatusContext, null, null, null, false, new ArrayList<GhprbBuildResultMessage>(0));
+        this(false, commitStatusContext, null, null, null, false, 
+             new ArrayList<GhprbBuildResultMessage>(0), false);
     }
 
     @DataBoundConstructor
@@ -61,7 +65,8 @@ public class GhprbSimpleStatus extends GhprbExtension implements GhprbCommitStat
                              String triggeredStatus,
                              String startedStatus,
                              Boolean addTestResults,
-                             List<GhprbBuildResultMessage> completedStatus) {
+                             List<GhprbBuildResultMessage> completedStatus,
+                             Boolean updateQueuePosition) {
         this.showMatrixStatus = showMatrixStatus;
         this.statusUrl = statusUrl;
         this.commitStatusContext = commitStatusContext == null ? "" : commitStatusContext;
@@ -69,6 +74,7 @@ public class GhprbSimpleStatus extends GhprbExtension implements GhprbCommitStat
         this.startedStatus = startedStatus;
         this.addTestResults = addTestResults;
         this.completedStatus = completedStatus;
+        this.updateQueuePosition = updateQueuePosition;
     }
 
     public String getStatusUrl() {
@@ -94,6 +100,10 @@ public class GhprbSimpleStatus extends GhprbExtension implements GhprbCommitStat
     public Boolean getAddTestResults() {
         return addTestResults == null ? Boolean.valueOf(false) : addTestResults;
     }
+    
+    public Boolean getUpdateQueuePosition() {
+        return updateQueuePosition == null ? false : updateQueuePosition;
+    }
 
     public List<GhprbBuildResultMessage> getCompletedStatus() {
         return completedStatus == null ? new ArrayList<GhprbBuildResultMessage>(0) : completedStatus;
@@ -103,7 +113,7 @@ public class GhprbSimpleStatus extends GhprbExtension implements GhprbCommitStat
         return true;
     }
 
-    public void onBuildTriggered(Job<?, ?> project,
+    public List<Action> onBuildTriggered(Job<?, ?> project,
                                  String commitSha,
                                  boolean isMergeable,
                                  int prId,
@@ -114,7 +124,7 @@ public class GhprbSimpleStatus extends GhprbExtension implements GhprbCommitStat
 
         // check if we even need to update
         if (StringUtils.equals(triggeredStatus, "--none--")) {
-            return;
+            return null;
         }
 
         String statusUrl = getDescriptor().getStatusUrlDefault(this);
@@ -133,6 +143,7 @@ public class GhprbSimpleStatus extends GhprbExtension implements GhprbCommitStat
                 sb.append(" sha1 is original commit.");
             }
         }
+       
 
         String url = Ghprb.replaceMacros(project, statusUrl);
         if (StringUtils.equals(statusUrl, "--none--")) {
@@ -144,6 +155,19 @@ public class GhprbSimpleStatus extends GhprbExtension implements GhprbCommitStat
             ghRepository.createCommitStatus(commitSha, state, url, message, context);
         } catch (IOException e) {
             throw new GhprbCommitStatusException(e, state, message, prId);
+        }
+        
+        Boolean updateQueuePosition = getDescriptor().getUpdateQueuePositionDefault(this);
+        
+        if (updateQueuePosition) {
+            // If the user desires, create a new build action that will cause 
+            // builds in the queue to update periodically.
+            ArrayList<Action> newActions = new ArrayList<Action>();
+            newActions.add(new GhprbUpdateQueueStatus(url, context, message, commitSha, ghRepository));
+            return newActions;
+        }
+        else {
+           return null;
         }
     }
 
@@ -182,7 +206,19 @@ public class GhprbSimpleStatus extends GhprbExtension implements GhprbCommitStat
             sb.append(Ghprb.replaceMacros(build, listener, startedStatus));
         }
 
-        createCommitStatus(build, listener, sb.toString(), repo, GHCommitState.PENDING);
+        // Grab the queue status action for the build
+        GhprbUpdateQueueStatus updateStatusAction = build.getAction(GhprbUpdateQueueStatus.class);
+        if (updateStatusAction != null) {
+            synchronized (updateStatusAction) {
+                // Update bit.
+                updateStatusAction.setStarted();
+
+                createCommitStatus(build, listener, sb.toString(), repo, GHCommitState.PENDING);
+            }
+        }
+        else {
+            createCommitStatus(build, listener, sb.toString(), repo, GHCommitState.PENDING);
+        }
     }
 
     public void onBuildComplete(Run<?, ?> build,
@@ -299,9 +335,13 @@ public class GhprbSimpleStatus extends GhprbExtension implements GhprbCommitStat
         public String getStartedStatusDefault(GhprbSimpleStatus local) {
             return Ghprb.getDefaultValue(local, GhprbSimpleStatus.class, "getStartedStatus");
         }
-
+        
         public Boolean getAddTestResultsDefault(GhprbSimpleStatus local) {
             return Ghprb.getDefaultValue(local, GhprbSimpleStatus.class, "getAddTestResults");
+        }
+        
+        public Boolean getUpdateQueuePositionDefault(GhprbSimpleStatus local) {
+            return Ghprb.getDefaultValue(local, GhprbSimpleStatus.class, "getUpdateQueuePosition");
         }
 
         public List<GhprbBuildResultMessage> getCompletedStatusDefault(GhprbSimpleStatus local) {
@@ -319,6 +359,5 @@ public class GhprbSimpleStatus extends GhprbExtension implements GhprbCommitStat
         public boolean addIfMissing() {
             return false;
         }
-
     }
 }
