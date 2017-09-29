@@ -199,7 +199,7 @@ public class GhprbPullRequestTest {
     }
 
     @Test
-    public void testContainsWatchedPathsNoRegionsDefined() {
+    public void testContainsWatchedPathsNoRegionsDefined() throws IOException {
         // GIVEN
         GhprbPullRequest ghprbPullRequest = new GhprbPullRequest(pr, helper, repo);
 
@@ -211,7 +211,7 @@ public class GhprbPullRequestTest {
     }
 
     @Test
-    public void testContainsWatchedPathsMatchingIncludedRegion() {
+    public void testContainsWatchedPathsMatchingIncludedRegion() throws IOException {
         // GIVEN
         GhprbPullRequest ghprbPullRequest = new GhprbPullRequest(pr, helper, repo);
         given(helper.getIncludedRegionPatterns()).willReturn(Collections.singletonList(Pattern.compile("path2/.*")));
@@ -224,7 +224,7 @@ public class GhprbPullRequestTest {
     }
 
     @Test
-    public void testContainsWatchedPathsNotMatchingIncludedRegions() {
+    public void testContainsWatchedPathsNotMatchingIncludedRegions() throws IOException {
         // GIVEN
         GhprbPullRequest ghprbPullRequest = new GhprbPullRequest(pr, helper, repo);
         given(helper.getIncludedRegionPatterns()).willReturn(Collections.singletonList(Pattern.compile("unknown/.*")));
@@ -237,7 +237,7 @@ public class GhprbPullRequestTest {
     }
 
     @Test
-    public void testContainsWatchedPathAllExcluded() {
+    public void testContainsWatchedPathAllExcluded() throws IOException {
         // GIVEN
         GhprbPullRequest ghprbPullRequest = new GhprbPullRequest(pr, helper, repo);
         given(helper.getExcludedRegionPatterns()).willReturn(Collections.singletonList(Pattern.compile(".*")));
@@ -250,7 +250,7 @@ public class GhprbPullRequestTest {
     }
 
     @Test
-    public void testContainsWatchedPathPartialExclusion() {
+    public void testContainsWatchedPathPartialExclusion() throws IOException {
         // GIVEN
         GhprbPullRequest ghprbPullRequest = new GhprbPullRequest(pr, helper, repo);
         given(helper.getExcludedRegionPatterns()).willReturn(Collections.singletonList(Pattern.compile("path1/.*")));
@@ -263,7 +263,7 @@ public class GhprbPullRequestTest {
     }
 
     @Test
-    public void testContainsWatchedPathAllExcludedWithInclude() {
+    public void testContainsWatchedPathAllExcludedWithInclude() throws IOException {
         // GIVEN
         GhprbPullRequest ghprbPullRequest = new GhprbPullRequest(pr, helper, repo);
         given(helper.getIncludedRegionPatterns()).willReturn(Collections.singletonList(Pattern.compile("path1/.*")));
@@ -277,7 +277,7 @@ public class GhprbPullRequestTest {
     }
 
     @Test
-    public void testContainsWatchedPathSomeExcludedWithInclude() {
+    public void testContainsWatchedPathSomeExcludedWithInclude() throws IOException {
         // GIVEN
         GhprbPullRequest ghprbPullRequest = new GhprbPullRequest(pr, helper, repo);
         given(helper.getIncludedRegionPatterns()).willReturn(Collections.singletonList(Pattern.compile("path1/.*")));
@@ -291,7 +291,7 @@ public class GhprbPullRequestTest {
     }
 
     @Test
-    public void testContainsWatchedPathIncludeFileExtension() {
+    public void testContainsWatchedPathIncludeFileExtension() throws IOException {
         // GIVEN
         GhprbPullRequest ghprbPullRequest = new GhprbPullRequest(pr, helper, repo);
         given(helper.getIncludedRegionPatterns()).willReturn(Collections.singletonList(Pattern.compile(".*\\.java")));
@@ -304,7 +304,7 @@ public class GhprbPullRequestTest {
     }
 
     @Test
-    public void testContainsWatchedPathIncludeFileExtensionExcludeFolder() {
+    public void testContainsWatchedPathIncludeFileExtensionExcludeFolder() throws IOException {
         // GIVEN
         GhprbPullRequest ghprbPullRequest = new GhprbPullRequest(pr, helper, repo);
         given(helper.getIncludedRegionPatterns()).willReturn(Collections.singletonList(Pattern.compile(".*\\.java")));

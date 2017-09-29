@@ -215,7 +215,7 @@ public class GhprbPullRequestMerge extends Recorder implements SimpleBuildStep {
             String commentorEmail = commentor.getEmail();
             String commentorLogin = commentor.getLogin();
 
-            GHUser prUser = pr.getUser();
+            GHUser prUser = Ghprb.getUserLocked(pr);
             if (prUser.getLogin().equals(commentorLogin)) {
                 listener.getLogger().println(commentorName + " (" + commentorLogin + ")  has submitted the PR[" + pr.getNumber() + pr.getNumber() + "] that is to be merged");
                 return true;

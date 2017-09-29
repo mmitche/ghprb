@@ -116,7 +116,7 @@ public class GhprbPullRequest {
 
     public GhprbPullRequest(GHPullRequest pr,
                             Ghprb ghprb,
-                            GhprbRepository repo) {
+                            GhprbRepository repo) throws IOException {
 
         id = pr.getNumber();
         setPullRequest(pr);
@@ -125,7 +125,7 @@ public class GhprbPullRequest {
 
         this.repo = repo;
 
-        GHUser author = pr.getUser();
+        GHUser author = Ghprb.getUserLocked(pr);
         String reponame = repo.getName();
 
         if (ghprb.isWhitelisted(author)) {
@@ -162,7 +162,7 @@ public class GhprbPullRequest {
         }
         // Call update PR with the update PR info and no comment
         updatePR(ghpr, null /*GHIssueComment*/, isWebhook);
-        commitAuthor = getPRCommitAuthor();
+        commitAuthor = null;
         checkSkipBuild();
         checkBlackListLabels();
         checkWhiteListLabels();
@@ -243,7 +243,8 @@ public class GhprbPullRequest {
         updatePR(null /*GHPullRequest*/, comment, true);
         // reset PR commit author
         commitAuthor = null;
-        checkSkipBuild();
+        // 
+        // checkSkipBuild();
         checkBlackListLabels();
         checkWhiteListLabels();
         tryBuild();
@@ -270,8 +271,8 @@ public class GhprbPullRequest {
             Date lastUpdateTime = updated;
             Date updatedDate = comment != null ? comment.getUpdatedAt() : ghpr.getUpdatedAt();
             // Don't log unless it was actually updated
-            if (updated == null || updated.compareTo(updatedDate) < 0) {
-                String user = comment != null ? comment.getUser().getName(): ghpr.getUser().getName();
+            if (updated == null || updated.compareTo(updatedDate) < 0) {                 
+                String user = comment != null ? Ghprb.getUserLocked(comment).getName(): Ghprb.getUserLocked(ghpr).getName();
                 logger.log(Level.INFO, "Pull request #{0} was updated/initialized on {1} at {2} by {3} ({4})", new Object[] { this.id, this.repo.getName(), updatedDate, user,
                     comment != null ? "comment" : "PR update"});
             }
@@ -475,7 +476,6 @@ public class GhprbPullRequest {
                 if (pr != null) {
                     logger.log(Level.FINEST, "PR is not null, checking if mergable");
                     checkMergeable();
-                    getPRCommitAuthor();
                 }
 
                 logger.log(Level.FINEST, "Running build...");
@@ -515,7 +515,7 @@ public class GhprbPullRequest {
     }
 
     private void checkComment(GHIssueComment comment) throws IOException {
-        GHUser sender = comment.getUser();
+        GHUser sender = Ghprb.getUserLocked(comment);
         String body = comment.getBody();
 
         String senderName = sender.getName();
@@ -528,7 +528,7 @@ public class GhprbPullRequest {
 
         if (helper.isWhitelistPhrase(body) && helper.isAdmin(sender)) { // add to whitelist
             GHIssue parent = comment.getParent();
-            GHUser author = parent.getUser();
+            GHUser author = Ghprb.getUserLocked(parent);
             if (!helper.isWhitelisted(author)) {
                 logger.log(Level.FINEST, "Author {0} not whitelisted, adding to whitelist.", author);
                 helper.addWhitelist(author.getLogin());
@@ -728,7 +728,7 @@ public class GhprbPullRequest {
      * @throws IOException Unable to connect to GitHub
      */
     public GHUser getPullRequestAuthor() throws IOException {
-        return getPullRequest().getUser();
+        return Ghprb.getUserLocked(getPullRequest());
     }
 
     /**
@@ -750,7 +750,8 @@ public class GhprbPullRequest {
      */
     public GHPullRequest getPullRequest(boolean force) throws IOException {
         if (this.pr == null || force) {
-            setPullRequest(repo.getActualPullRequest(this.id));
+            GHPullRequest ghpr = GhprbRootAction.getPullRequestHack(this.id, this.pr, force, repo.getGitHubRepo());
+            setPullRequest(ghpr);
         }
         return pr;
     }

@@ -14,6 +14,7 @@ import hudson.security.ACL;
 import hudson.triggers.Trigger;
 import hudson.util.DescribableList;
 import hudson.util.Secret;
+import java.io.IOException;
 import jenkins.model.ParameterizedJobMixIn;
 import org.apache.commons.collections.Predicate;
 import org.apache.commons.collections.PredicateUtils;
@@ -32,6 +33,8 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import org.kohsuke.github.GHIssueComment;
+import org.kohsuke.github.GHPullRequest;
 
 /**
  * @author janinko
@@ -41,6 +44,8 @@ public class Ghprb {
     public static final Pattern githubUserRepoPattern = Pattern.compile("^(http[s]?://[^/]*)/([^/]*/[^/]*).*");
 
     private final GhprbTrigger trigger;
+    
+    private static final Object userOrgLock = new Object(); 
 
     public Ghprb(GhprbTrigger trigger) {
         this.trigger = trigger;
@@ -66,6 +71,18 @@ public class Ghprb {
 
     public GhprbGitHub getGitHub() {
         return trigger.getGhprbGitHub();
+    }
+    
+    public static GHUser getUserLocked(GHIssueComment comment) throws IOException {
+        synchronized(userOrgLock) {
+            return comment.getUser();
+        }
+    }
+    
+    public static GHUser getUserLocked(GHIssue pr) throws IOException {
+        synchronized(userOrgLock) {
+            return pr.getUser();
+        }
     }
 
     public static Pattern compilePattern(String regex) {

@@ -6,6 +6,7 @@ import com.google.common.annotations.VisibleForTesting;
 import hudson.Extension;
 import hudson.Util;
 import hudson.matrix.MatrixProject;
+import hudson.model.Action;
 import hudson.model.CauseAction;
 import hudson.model.Item;
 import hudson.model.Job;

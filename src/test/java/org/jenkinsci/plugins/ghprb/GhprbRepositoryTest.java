@@ -195,7 +195,6 @@ public class GhprbRepositoryTest {
         verify(ghPullRequest, times(1)).getUpdatedAt();
         verify(ghPullRequest, times(1)).getUser();
         verify(ghPullRequest, times(2)).getBase();
-        verify(ghPullRequest, times(1)).getComments();
         verify(ghPullRequest, times(1)).listCommits();
         verify(ghPullRequest, times(1)).getCommentsCount();
         verifyNoMoreInteractions(ghPullRequest);
@@ -543,8 +542,8 @@ public class GhprbRepositoryTest {
         verify(ghPullRequest, times(2)).getUpdatedAt();
         verify(ghPullRequest, times(1)).getCreatedAt();
 
-        verify(ghPullRequest, times(2)).getComments();
-        verify(ghPullRequest, times(2)).getCommentsCount();
+        verify(ghPullRequest, times(1)).getComments();
+        verify(ghPullRequest, times(3)).getCommentsCount();
         verify(ghPullRequest, times(3)).listCommits();
         verify(ghPullRequest, times(1)).getBody();
         verify(ghPullRequest, times(1)).getId();
@@ -649,7 +648,7 @@ public class GhprbRepositoryTest {
 
         verify(ghPullRequest, times(1)).getId();
         verify(ghPullRequest, times(1)).getComments();
-        verify(ghPullRequest, times(1)).getCommentsCount();
+        verify(ghPullRequest, times(3)).getCommentsCount();
         verify(ghPullRequest, times(4)).listCommits();
 
         verify(ghPullRequest, times(2)).getBody();
@@ -746,8 +745,8 @@ public class GhprbRepositoryTest {
 
         verify(ghPullRequest, times(1)).getId();
         verify(ghPullRequest, times(1)).getComments();
-//        verify(ghPullRequest, times(1)).getCommentsCount();
-        verify(ghPullRequest, times(1)).listCommits();
+        verify(ghPullRequest, times(3)).getCommentsCount();
+        verify(ghPullRequest, times(3)).listCommits();
 
         verify(ghPullRequest, times(1)).getBody();
         verifyNoMoreInteractions(ghPullRequest);
@@ -761,7 +760,7 @@ public class GhprbRepositoryTest {
         verify(helper, times(2)).getWhiteListLabels();
 
         verify(helper, times(4)).isProjectDisabled();
-        verify(helper, times(2)).checkSkipBuild(eq(ghPullRequest));
+//        verify(helper, times(2)).checkSkipBuild(eq(ghPullRequest));
         verify(helper, times(1)).isIgnoreBotUser();
         verify(helper, times(1)).isBotUser(ghUser);
         verifyNoMoreInteractions(helper);
@@ -838,8 +837,8 @@ public class GhprbRepositoryTest {
 
         verify(ghPullRequest, times(1)).getId();
         verify(ghPullRequest, times(1)).getComments();
-//        verify(ghPullRequest, times(1)).getCommentsCount();
-        verify(ghPullRequest, times(2)).listCommits();
+        verify(ghPullRequest, times(3)).getCommentsCount();
+        verify(ghPullRequest, times(4)).listCommits();
 
         verify(ghPullRequest, times(2)).getBody();
         verifyNoMoreInteractions(ghPullRequest);
@@ -857,9 +856,9 @@ public class GhprbRepositoryTest {
         verify(helper).isRetestPhrase(eq("test this please"));
         verify(helper).isAdmin(eq(ghUser));
         verify(helper, times(4)).isProjectDisabled();
-        verify(helper, times(2)).checkSkipBuild(eq(ghPullRequest));
         verify(helper, times(1)).isIgnoreBotUser();
         verify(helper, times(1)).isBotUser(ghUser);
+        verify(ghPullRequest, times(3)).getCommentsCount();
         verifyNoMoreInteractions(helper);
 
         verify(ghUser, times(1)).getEmail(); // Call to Github API
