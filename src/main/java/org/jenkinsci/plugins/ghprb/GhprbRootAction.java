@@ -79,6 +79,20 @@ public class GhprbRootAction implements UnprotectedRootAction {
             }
         }
     }
+    
+    // TEMPORARY
+    private static final Map<String, GHRepository> repoMap = new HashMap<String, GHRepository>();
+    
+    public static synchronized GHRepository getRepositoryHack(GitHub gitHub, String repoName) throws IOException {
+        if (repoMap.containsKey(repoName)) {
+            return repoMap.get(repoName);
+        }
+        
+        GHRepository repo = gitHub.getRepository(repoName);
+        repoMap.put(repoName, repo);
+        
+        return repo;
+    }
 
     public String getIconFileName() {
         return null;

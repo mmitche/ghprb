@@ -105,7 +105,7 @@ public class GhprbRepository implements Saveable{
         
 
         try {
-            ghRepository = gitHub.getRepository(reponame);
+            ghRepository = GhprbRootAction.getRepositoryHack(gitHub, reponame);
         } catch (IOException ex) {
             logger.log(Level.SEVERE, "Could not retrieve GitHub repository named " + reponame + " (Do you have properly set 'GitHub project' field in job configuration?)", ex);
             return false;

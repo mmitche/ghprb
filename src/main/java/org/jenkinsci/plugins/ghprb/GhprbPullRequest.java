@@ -306,11 +306,15 @@ public class GhprbPullRequest {
                 // check that comment.  Otherwise check the full set since the last
                 // time we updated (which might have just happened).
                 int commentsChecked = 0;
+                /* ISSUE-THIS IS REALLY REALLY INEFFICIENT HERE.  A Jenkins restart
+                   will kill the API rate limit really fast in a large installation.
+                   Disabling this code means that comments still work in a webhook
+                   installation but 'back comments' will not be checked.
                 if (wasUpdated && (!isWebhook || !initialCommentCheckDone)) {
                     initialCommentCheckDone = true;
                     commentsChecked = checkComments(pullRequest, lastUpdateTime);
                 }
-                else if (comment != null) {
+                else */if (comment != null) {
                     checkComment(comment);
                     commentsChecked = 1;
                 }
